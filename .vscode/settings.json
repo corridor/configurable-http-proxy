@@ -1,0 +1,35 @@
+{
+  "python.pythonPath": "venv/bin/python",
+  "editor.rulers": [110, 120],
+  "python.linting.enabled": false,
+  "python.formatting.provider": "black",
+  "files.watcherExclude": {
+    "**/venv/**": true,
+    "**/build/**": true,
+    "**/htmlcov/**": true
+  },
+  "files.exclude": {
+    "venv/**": true,
+    "build/**": true,
+    "dist/**": true,
+    ".eggs/**": true,
+    "target/**": true,
+    ".pytest_cache/**": true,
+    ".cache": true,
+    ".coverage*": true,
+    "htmlcov/**": true,
+    "**/__pycache__/**": true
+  },
+  "search.exclude": {
+    "venv/**": true,
+    "build/**": true,
+    "dist/**": true,
+    ".eggs/**": true,
+    "target/**": true,
+    ".pytest_cache/**": true,
+    ".cache": true,
+    ".coverage*": true,
+    "htmlcov/**": true,
+    "**/__pycache__/**": true
+  }
+}
