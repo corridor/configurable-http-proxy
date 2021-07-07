@@ -15,19 +15,19 @@ BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def load_storage(options):
-    backend = options.get("storageBackend")
-    if backend:
+    backend = options.get("storage_backend")
+    if isinstance(backend, str):
         backend_import = backend.split(".")
         backend_module = ".".join(backend_import[:-1])
         backend_clsname = backend_import[-1]
         if backend_module == "":
-            raise AssertionError(f"Unknown source_type provided {backend}")
-        handler_cls = getattr(importlib.import_module(backend_module), backend_clsname)
-
-        return handler_cls()
+            raise AssertionError(f"Unknown backend provided '{backend}'")
+        backend = getattr(importlib.import_module(backend_module), backend_clsname)
+    elif backend is None:
+        backend = MemoryStore
 
     # loads default storage strategy
-    return MemoryStore()
+    return backend()
 
 
 class PythonProxy:
