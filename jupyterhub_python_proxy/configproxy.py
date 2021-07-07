@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import json
 import os
 import typing
 import urllib.parse
@@ -9,7 +10,7 @@ from tornado.web import Application
 from jupyterhub_python_proxy import log
 from jupyterhub_python_proxy.store import MemoryStore
 from jupyterhub_python_proxy.trie import URLTrie
-from jupyterhub_python_proxy.handlers import APIHandler
+from jupyterhub_python_proxy.handlers import APIHandler, ProxyWebHandler
 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -40,12 +41,10 @@ class PythonProxy:
             self.log = log
 
         self._routes = load_storage(self.options)
-        if self.options.get("include_prefix") is not None:
-            self.include_prefix = self.options["include_prefix"]
-        else:
-            self.include_prefix = True
+        self.include_prefix = self.options.get("include_prefix") or True
+        self.prepend_path = self.options.get("prepend_path") or True
         self.headers = self.options.get("headers")
-        self.host_routing = self.options.get("host_routing")
+        self.host_routing = self.options.get("host_routing") or False
         self.error_target = self.options.get("error_target")
         if self.error_target and not self.error_target.endswith("/"):
             self.error_target = self.error_target + "/"  # ensure trailing slash
@@ -62,12 +61,17 @@ class PythonProxy:
                 (r"^\/api\/routes(\/.*)?$", APIHandler, {"proxy": self}),
             ]
         )
+        self.proxy_app = Application(
+            [
+                (r"/(.*)", ProxyWebHandler, {"proxy": self}),
+            ]
+        )
 
     def add_route(self, path, data):
         # add a route to the routing table
         path = self._routes.clean_path(path)
         if self.host_routing and path != "/":
-            data.host = path.split("/")[1]
+            data["host"] = path.split("/")[1]
         self.log.info(f"Adding route {path} -> {data.get('target')}")
 
         self._routes.add(path, data)
@@ -110,3 +114,9 @@ class PythonProxy:
         result = self._routes.get(prefix)
         if result:
             return self._routes.update(prefix, {"last_activity": datetime.datetime.now()})
+
+    def handle_health_check(self, req, res):
+        if req.url == "/_chp_healthz":
+            res.writeHead(200, {"Content-Type": "application/json"})
+            res.write(json.dumps({"status": "OK"}))
+            res.end()
