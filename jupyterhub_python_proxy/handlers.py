@@ -112,7 +112,7 @@ class APIHandler(RequestHandler):
         self.finish()
 
 
-class ProxyWebHandler(RequestHandler):
+class ProxyHandler(RequestHandler):
     def initialize(self, proxy: "PythonProxy" = None, **kwargs):
         super().initialize(**kwargs)
         self.proxy = proxy
@@ -135,8 +135,8 @@ class ProxyWebHandler(RequestHandler):
     async def handle_proxy_error(self, code, err):
         # Called when proxy itself has an error so far, just 404 for no target and 503 for target not responding.
         # Custom error server gets `/CODE?url=/escapedUrl/`, e.g. /404?url=%2Fuser%2Ffoo
-
         self.proxy.log.error(f"{code} {self.request.method} {self.request.path} {str(err)}")
+
         if self.proxy.error_target:
             error_target = urllib.parse.urlparse(self.proxy.error_target)
             # error request is $errorTarget/$code?url=$requestUrl
@@ -167,6 +167,7 @@ class ProxyWebHandler(RequestHandler):
             self.set_status(code)
             self.write(response.body)
             self.finish()
+
         elif self.proxy.error_path:
             filename = os.path.join(self.proxy.error_path, f"{code}.html")
             if not os.path.exists(filename):
@@ -186,47 +187,20 @@ class ProxyWebHandler(RequestHandler):
             self.set_status(code)
             self.set_header("Content-Type", "text/html")
             self.finish()
+
         else:
             self.handle_proxy_error_default(code, err)
 
-    def on_finish(self):
-        # update last activity on completion of the request only consider 'successful' requests activity
-        # A flood of invalid requests such as 404s or 403s or 503s because the endpoint is down
-        # shouldn't make it look like the endpoint is 'active'
-
-        code = self.get_status()
-        prefix = self.target["prefix"] if self.target else ""
-        # (don't count redirects...but should we?)
-        if code < 300:
-            if prefix:
-                self.proxy.update_last_activity(prefix)
-        else:
-            self.proxy.log.debug(f"Not recording activity for status {code} on {prefix}")
-
-    async def get_target(self, path):
+    async def get_target_url(self, path):
         self.target = self.proxy.target_for_req(None, path)
         if self.target is None:
             await self.handle_proxy_error(404, err=None)
             return
-        return self.target["prefix"], self.target["target"]
 
-    def health_check(self):
-        if self.request.path == "/_chp_healthz":
-            self.set_status(200)
-            self.set_header("Content-Type", "application/json")
-            self.write(json.dumps({"status": "OK"}))
-            self.finish()
-            return True
-        return False
-
-    async def get(self, path=None):
-        if self.health_check():
-            return
-
-        prefixtarget = await self.get_target(path)
-        if prefixtarget is None:
-            return
-        prefix, target = prefixtarget
+        prefix, target = self.target["prefix"], self.target["target"]
+        if isinstance(self, WebSocketHandler):
+            self.proxy.log.debug(f"PROXY WS {self.request.path} to {target}")
+        else:
         self.proxy.log.debug(f"PROXY WEB {self.request.path} to {target}")
 
         proxy_path = urllib.parse.quote(path)
@@ -243,8 +217,40 @@ class ProxyWebHandler(RequestHandler):
             target = target._replace(query=self.request.query)
             target = target._replace(path=proxy_path)
 
-        url = target.geturl()
+        return target.geturl()
 
+
+class ProxyWebHandler(ProxyHandler, RequestHandler):
+    def on_finish(self):
+        # update last activity on completion of the request only consider 'successful' requests activity
+        # A flood of invalid requests such as 404s or 403s or 503s because the endpoint is down
+        # shouldn't make it look like the endpoint is 'active'
+
+        code = self.get_status()
+        prefix = self.target["prefix"] if self.target else ""
+        # (don't count redirects...but should we?)
+        if code < 300:
+            if prefix:
+                self.proxy.update_last_activity(prefix)
+        else:
+            self.proxy.log.debug(f"Not recording activity for status {code} on {prefix}")
+
+    def health_check(self):
+        if self.request.path == "/_chp_healthz":
+            self.set_status(200)
+            self.set_header("Content-Type", "application/json")
+            self.write(json.dumps({"status": "OK"}))
+            self.finish()
+            return True
+        return False
+
+    async def get(self, path=None):
+        if self.health_check():
+            return
+
+        url = await self.get_target_url(path)
+        if url is None:
+            return
         req = HTTPRequest(url, follow_redirects=False)
         client = AsyncHTTPClient()
         try:
