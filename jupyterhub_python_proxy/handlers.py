@@ -7,6 +7,7 @@ import urllib.parse
 import dateutil.parser
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.web import RequestHandler, HTTPError
+from tornado.websocket import WebSocketHandler, websocket_connect
 
 if typing.TYPE_CHECKING:
     from jupyterhub_python_proxy.configproxy import PythonProxy
@@ -112,11 +113,13 @@ class APIHandler(RequestHandler):
         self.finish()
 
 
-class ProxyHandler(RequestHandler):
+class ProxyHandler(WebSocketHandler):
     def initialize(self, proxy: "PythonProxy" = None, **kwargs):
         super().initialize(**kwargs)
         self.proxy = proxy
         self.target = None
+        self.ws = None
+        self.closed = True
 
     def write_error(self, status_code, **kwargs):
         err_type, err, err_tb = (None, None, None)
@@ -198,9 +201,6 @@ class ProxyHandler(RequestHandler):
             return
 
         prefix, target = self.target["prefix"], self.target["target"]
-        if isinstance(self, WebSocketHandler):
-            self.proxy.log.debug(f"PROXY WS {self.request.path} to {target}")
-        else:
         self.proxy.log.debug(f"PROXY WEB {self.request.path} to {target}")
 
         proxy_path = urllib.parse.quote(path)
@@ -219,8 +219,6 @@ class ProxyHandler(RequestHandler):
 
         return target.geturl()
 
-
-class ProxyWebHandler(ProxyHandler, RequestHandler):
     def on_finish(self):
         # update last activity on completion of the request only consider 'successful' requests activity
         # A flood of invalid requests such as 404s or 403s or 503s because the endpoint is down
@@ -245,7 +243,10 @@ class ProxyWebHandler(ProxyHandler, RequestHandler):
         return False
 
     async def get(self, path=None):
-        if self.health_check():
+        if self.request.headers.get("Upgrade", "").lower() == "websocket":
+            await WebSocketHandler.get(self, path)
+            return
+        elif self.health_check():
             return
 
         url = await self.get_target_url(path)
@@ -259,11 +260,6 @@ class ProxyWebHandler(ProxyHandler, RequestHandler):
             await self.handle_proxy_error(503, err)
             return
 
-        # websocket upgrade
-        if response.code == 599:
-            self.set_status(200)  # switching protocols
-            return
-
         self.set_status(response.code)
         self.write(response.body)
         for key, val in response.headers.get_all():
@@ -272,3 +268,48 @@ class ProxyWebHandler(ProxyHandler, RequestHandler):
         if response.body:
             self.set_header("Content-Length", len(response.body))
         self.finish()
+
+    async def open(self, path=None):
+        self.closed = False
+
+        url = await self.get_target_url(path)
+        if url is None:
+            return
+        url = urllib.parse.urlparse(url)
+        url = url._replace(scheme=url.scheme.replace("http", "ws"))
+        url = url.geturl()
+
+        def write(msg):
+            if self.closed:
+                if self.ws:
+                    self.ws.close()
+                    self.ws = None
+            else:
+                # update timestamp on any reply data
+                prefix = self.target["prefix"] if self.target else ""
+                if prefix:
+                    self.proxy.update_last_activity(prefix)
+
+                if self.ws and msg is not None:
+                    self.write_message(msg, binary=isinstance(msg, bytes))
+
+        try:
+            self.ws = await websocket_connect(url, on_message_callback=write)
+        except Exception as err:
+            self.proxy.log.error(f"503 {self.request.method} {self.request.path} {str(err)}")
+            raise
+
+    def on_message(self, message):
+        if self.ws:
+            # update timestamp on any request data
+            prefix = self.target["prefix"] if self.target else ""
+            if prefix:
+                self.proxy.update_last_activity(prefix)
+
+            self.ws.write_message(message)
+
+    def on_close(self):
+        if self.ws:
+            self.ws.close()
+            self.ws = None
+            self.closed = True

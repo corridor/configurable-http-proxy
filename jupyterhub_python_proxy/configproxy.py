@@ -10,7 +10,7 @@ from tornado.web import Application
 from jupyterhub_python_proxy import log
 from jupyterhub_python_proxy.store import MemoryStore
 from jupyterhub_python_proxy.trie import URLTrie
-from jupyterhub_python_proxy.handlers import APIHandler, ProxyWebHandler
+from jupyterhub_python_proxy.handlers import APIHandler, ProxyHandler
 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -63,7 +63,7 @@ class PythonProxy:
         )
         self.proxy_app = Application(
             [
-                (r"/(.*)", ProxyWebHandler, {"proxy": self}),
+                (r"/(.*)", ProxyHandler, {"proxy": self}),
             ]
         )
 

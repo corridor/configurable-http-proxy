@@ -3,23 +3,26 @@ import json
 import os
 
 import pytest
-import tornado.gen
 from tornado.httpserver import HTTPServer
-from tornado.testing import AsyncHTTPTestCase, bind_unused_port, get_async_test_timeout
+from tornado.testing import AsyncHTTPTestCase, bind_unused_port, get_async_test_timeout, gen_test
 from tornado.web import Application, RequestHandler
+from tornado.websocket import WebSocketHandler, websocket_connect
 
 from jupyterhub_python_proxy.configproxy import PythonProxy
 from jupyterhub_python_proxy_test.testutil import RESOURCES_PATH, pytest_regex
 
 
-class TargetHandler(RequestHandler):
+class TargetHandler(WebSocketHandler):
     def initialize(self, target=None, path=None, **kwargs):
         super().initialize(**kwargs)
         self.target = target
         self.path = path
 
-    @tornado.gen.coroutine
-    def get(self, path=None):
+    async def get(self, path=None):
+        if self.request.headers.get("Upgrade", "").lower() == "websocket":
+            await WebSocketHandler.get(self, path)
+            return
+
         reply = {
             "target": self.target,
             "path": self.path,
@@ -31,6 +34,17 @@ class TargetHandler(RequestHandler):
         self.write(json.dumps(reply))
         self.finish()
 
+    def open(self, path=None):
+        self.write_message("connected")
+
+    def on_message(self, message):
+        reply = {
+            "target": self.target,
+            "path": self.path,
+            "message": message,
+        }
+        self.write_message(json.dumps(reply))
+
 
 class RedirectingTargetHandler(RequestHandler):
     def initialize(self, target=None, path=None, redirect_to=None, **kwargs):
@@ -39,7 +53,6 @@ class RedirectingTargetHandler(RequestHandler):
         self.path = path
         self.redirect_to = redirect_to
 
-    @tornado.gen.coroutine
     def get(self, path=None):
         print("RedirectingTargetHandler - get -- starting")
         self.set_header("Location", self.redirect_to)
@@ -52,7 +65,6 @@ class ErrorTargetHandler(RequestHandler):
     def initialize(self, target=None, path=None, **kwargs):
         super().initialize(**kwargs)
 
-    @tornado.gen.coroutine
     def get(self, path=None):
         self.set_header("Content-Type", "text/plain")
         self.write(self.get_query_argument("url"))
@@ -114,41 +126,25 @@ class TestProxy(AsyncHTTPTestCase):
         route = self.proxy.get_route("/")
         assert route["last_activity"] > now
 
+    @gen_test
     def test_basic_websocket_request(self):
-        pytest.skip("websocket is not supported")
+        now = datetime.datetime.now()
+        ws_client = yield websocket_connect(self.get_url("/").replace("http:", "ws:"))
+        route = self.proxy.get_route("/")
+        assert route["last_activity"] <= now
 
-    #   it("basic WebSocket request", function (done) {
-    #     var ws = new WebSocket("ws://127.0.0.1:" + port);
-    #     ws.on("error", function () {
-    #       // jasmine fail is only in master
-    #       expect("error").toEqual("ok");
-    #       done();
-    #     });
-    #     var nmsgs = 0;
-    #     ws.on("message", function (msg) {
-    #       if (nmsgs === 0) {
-    #         expect(msg).toEqual("connected");
-    #       } else {
-    #         msg = JSON.parse(msg);
-    #         expect(msg).toEqual(
-    #           jasmine.objectContaining({
-    #             path: "/",
-    #             message: "hi",
-    #           })
-    #         );
-    #         // check last_activity was updated
-    #         return proxy._routes.get("/").then((route) => {
-    #           expect(route.last_activity).toBeGreaterThan(proxy._setup_timestamp);
-    #           ws.close();
-    #           done();
-    #         });
-    #       }
-    #       nmsgs++;
-    #     });
-    #     ws.on("open", function () {
-    #       ws.send("hi");
-    #     });
-    #   });
+        ws_client.write_message("hi")
+        response = yield ws_client.read_message()
+        assert response == "connected"
+
+        response = yield ws_client.read_message()
+        reply = json.loads(response)
+        assert reply["path"] == "/"
+        assert reply["message"] == "hi"
+
+        # check last_activity was updated
+        route = self.proxy.get_route("/")
+        assert route["last_activity"] > now
 
     def test_proxy_request_event_can_modify_header(self):
         pytest.skip("proxy_request event is not supported")
@@ -266,33 +262,31 @@ class TestProxy(AsyncHTTPTestCase):
 
     def test_last_activity_not_updated_on_errors(self):
         now = datetime.datetime.now()
-        # mock timestamp in the past
-        first_activity = now - datetime.timedelta(hours=1)
 
         self.proxy.remove_route("/")
         self.proxy.add_route("/missing", {"target": "https://127.0.0.1:12345"})
-        self.proxy._routes.update("/missing", {"last_activity": first_activity})
+        self.proxy._routes.update("/missing", {"last_activity": now})
 
         # fail a http activity
         resp = self.fetch("/missing/prefix", raise_error=False)
         assert resp.code == 503  # This should be 503 ??
-        assert self.proxy.get_route("/missing")["last_activity"] == first_activity
+        assert self.proxy.get_route("/missing")["last_activity"] == now
+
+    @gen_test
+    def test_last_activity_not_updated_on_errors_websocket(self):
+        now = datetime.datetime.now()
+
+        self.proxy.remove_route("/")
+        self.proxy.add_route("/missing", {"target": "https://127.0.0.1:12345"})
+        self.proxy._routes.update("/missing", {"last_activity": now})
 
         # fail a websocket activity
-        pytest.xfail(reason="websocket not supported")
-        # var ws = new WebSocket("ws://127.0.0.1:" + port + "/missing/ws");
-        # ws.on("error", () => {
-        #   // expect this, since there is no websocket handler
-        #   // check last_activity was not updated
-        #   // assert self.proxy.get_route('/missing')['last_activity'] == first_activity
-        #   expectNoActivity().then((route) => {
-        #       ws.close();
-        #       done();
-        #   });
-        # });
-        # ws.on("open", () => {
-        #   done.fail("Expected websocket error");
-        # });
+        # NOTE: Shouldn't this have thrown an error ?
+        yield websocket_connect(self.get_url("/missing/ws").replace("http:", "ws:"))
+
+        # expect an error, since there is no websocket handler - check last_activity was not updated
+        route = self.proxy.get_route("/missing")
+        assert route["last_activity"] == now
 
     def test_custom_error_target(self):
         sock, port = bind_unused_port()
@@ -389,3 +383,11 @@ class TestProxy(AsyncHTTPTestCase):
         resp = self.fetch("/_chp_healthz")
         reply = json.loads(resp.body)
         assert reply == {"status": "OK"}
+
+    def test_target_not_found(self):
+        self.proxy.remove_route("/")
+
+        resp = self.fetch("/unknown", raise_error=False)
+        assert resp.code == 404
+        assert "text/html" in resp.headers["content-type"]
+        assert b"<title>404: Not Found</title>" in resp.body
