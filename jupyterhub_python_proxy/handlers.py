@@ -242,20 +242,18 @@ class ProxyHandler(WebSocketHandler):
             return True
         return False
 
-    async def get(self, path=None):
-        if self.request.headers.get("Upgrade", "").lower() == "websocket":
-            await WebSocketHandler.get(self, path)
-            return
-        elif self.health_check():
-            return
-
+    async def call_proxy(self, path=None):
         url = await self.get_target_url(path)
         if url is None:
             return
+
         req = HTTPRequest(
             url,
+            method=self.request.method,
             headers=dict(self.request.headers.get_all()),
+            body=self.request.body,
             follow_redirects=False,
+            allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
         )
         client = AsyncHTTPClient()
         try:
@@ -272,6 +270,24 @@ class ProxyHandler(WebSocketHandler):
         if response.body:
             self.set_header("Content-Length", len(response.body))
         self.finish()
+
+    async def get(self, path=None):
+        if self.request.headers.get("Upgrade", "").lower() == "websocket":
+            await WebSocketHandler.get(self, path)
+            return
+        elif self.health_check():
+            return
+        return await self.call_proxy(path=path)
+
+    async def _proxy_method(self, *args, **kwargs) -> None:
+        return await self.call_proxy(*args, **kwargs)
+
+    head = _proxy_method
+    post = _proxy_method
+    delete = _proxy_method
+    patch = _proxy_method
+    put = _proxy_method
+    options = _proxy_method
 
     async def open(self, path=None):
         self.closed = False

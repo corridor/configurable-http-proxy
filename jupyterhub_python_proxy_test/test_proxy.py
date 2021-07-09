@@ -126,6 +126,20 @@ class TestProxy(AsyncHTTPTestCase):
         route = self.proxy.get_route("/")
         assert route["last_activity"] > now
 
+        # check the other HTTP methods too
+        resp = self.fetch("/", method="HEAD", raise_error=False)
+        assert resp.code == 405
+        resp = self.fetch("/", method="OPTIONS", raise_error=False)
+        assert resp.code == 405
+        resp = self.fetch("/", method="POST", body="", raise_error=False)
+        assert resp.code == 405
+        resp = self.fetch("/", method="DELETE", raise_error=False)
+        assert resp.code == 405
+        resp = self.fetch("/", method="PATCH", body="", raise_error=False)
+        assert resp.code == 405
+        resp = self.fetch("/", method="PUT", body="", raise_error=False)
+        assert resp.code == 405
+
     @gen_test
     def test_basic_websocket_request(self):
         now = datetime.datetime.now()
