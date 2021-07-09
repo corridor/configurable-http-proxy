@@ -7,8 +7,8 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
 
-from jupyterhub_python_proxy import __version__, log
-from jupyterhub_python_proxy.configproxy import PythonProxy
+from configurable_http_proxy import __version__, log
+from configurable_http_proxy.configproxy import PythonProxy
 
 
 def print_version(ctx, param, value):

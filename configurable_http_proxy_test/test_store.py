@@ -1,4 +1,4 @@
-from jupyterhub_python_proxy.store import MemoryStore
+from configurable_http_proxy.store import MemoryStore
 
 
 class TestMemoryStore:

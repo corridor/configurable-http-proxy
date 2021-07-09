@@ -1,8 +1,8 @@
 import logging
 
-from jupyterhub_python_proxy._version import version as __version__  # noqa: F401
+from configurable_http_proxy._version import version as __version__  # noqa: F401
 
-log = logging.getLogger("jupyterhub_python_proxy")
+log = logging.getLogger("configurable_http_proxy")
 log.setLevel(logging.INFO)
 
 handler = logging.StreamHandler()

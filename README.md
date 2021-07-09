@@ -1,6 +1,16 @@
-# jupyterhub-python-proxy
+# configurable-http-proxy
 
-A pure python alternative for configurable-http-proxy
+This is a pure python implementation of the
+[configurable-http-proxy](https://github.com/jupyterhub/configurable-http-proxy)
+written in nodejs. It is meant to be a drop in replacement.
+
+## Install
+
+Prerequisite: Python 3.6+
+
+```bash
+pip install configurable-http-proxy
+```
 
 ## Feature support
 

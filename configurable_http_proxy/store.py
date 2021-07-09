@@ -1,6 +1,6 @@
 import typing
 
-from jupyterhub_python_proxy.trie import URLTrie, trim_prefix
+from configurable_http_proxy.trie import URLTrie, trim_prefix
 
 
 class BaseStore:

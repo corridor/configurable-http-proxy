@@ -1,4 +1,4 @@
-from jupyterhub_python_proxy.trie import URLTrie
+from configurable_http_proxy.trie import URLTrie
 
 
 def setup_full_trie():

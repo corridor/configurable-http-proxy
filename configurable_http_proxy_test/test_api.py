@@ -3,8 +3,8 @@ import json
 
 from tornado.testing import AsyncHTTPTestCase
 
-from jupyterhub_python_proxy.configproxy import PythonProxy
-from jupyterhub_python_proxy_test.testutil import pytest_regex
+from configurable_http_proxy.configproxy import PythonProxy
+from configurable_http_proxy_test.testutil import pytest_regex
 
 
 class TestAPI(AsyncHTTPTestCase):

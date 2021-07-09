@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Project specific
-jupyterhub_python_proxy/version.txt
+configurable_http_proxy/version.txt

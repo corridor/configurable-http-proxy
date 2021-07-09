@@ -9,8 +9,8 @@ from tornado.testing import AsyncHTTPTestCase, bind_unused_port, get_async_test_
 from tornado.web import Application, RequestHandler
 from tornado.websocket import WebSocketHandler, websocket_connect
 
-from jupyterhub_python_proxy.configproxy import PythonProxy
-from jupyterhub_python_proxy_test.testutil import RESOURCES_PATH, pytest_regex
+from configurable_http_proxy.configproxy import PythonProxy
+from configurable_http_proxy_test.testutil import RESOURCES_PATH, pytest_regex
 
 
 class TargetHandler(WebSocketHandler):
@@ -254,12 +254,12 @@ class TestProxy(AsyncHTTPTestCase):
     def test_storage_backend_config(self):
         # With a importable string
         proxy = PythonProxy(
-            {"storage_backend": "jupyterhub_python_proxy_test.dummy_store.PlugableDummyStore"}
+            {"storage_backend": "configurable_http_proxy_test.dummy_store.PlugableDummyStore"}
         )
         assert type(proxy._routes).__name__ == "PlugableDummyStore"
 
         # With a class
-        from jupyterhub_python_proxy_test.dummy_store import PlugableDummyStore
+        from configurable_http_proxy_test.dummy_store import PlugableDummyStore
 
         proxy = PythonProxy({"storage_backend": PlugableDummyStore})
         assert type(proxy._routes).__name__ == "PlugableDummyStore"

@@ -10,7 +10,7 @@ from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler, websocket_connect
 
 if typing.TYPE_CHECKING:
-    from jupyterhub_python_proxy.configproxy import PythonProxy
+    from configurable_http_proxy.configproxy import PythonProxy
 
 
 def json_converter(val):

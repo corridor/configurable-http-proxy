@@ -7,10 +7,10 @@ import urllib.parse
 
 from tornado.web import Application
 
-from jupyterhub_python_proxy import log
-from jupyterhub_python_proxy.store import MemoryStore
-from jupyterhub_python_proxy.trie import URLTrie
-from jupyterhub_python_proxy.handlers import APIHandler, ProxyHandler
+from configurable_http_proxy import log
+from configurable_http_proxy.store import MemoryStore
+from configurable_http_proxy.trie import URLTrie
+from configurable_http_proxy.handlers import APIHandler, ProxyHandler
 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
