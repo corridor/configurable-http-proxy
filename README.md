@@ -1,2 +1,25 @@
 # jupyterhub-python-proxy
+
 A pure python alternative for configurable-http-proxy
+
+## Feature support
+
+The following items are supported:
+
+- Proxying for Websocket and HTTP requests
+- Configuring the proxy using API requests
+- Auth token for API requests
+- Error management using error_path and error_target
+- Prepend path or include prefix
+- Customizable storage backends
+- PID file writing
+- Logging
+
+The following options are not supported (yet):
+
+- SSL for proxy, client, API is not available (`--ssl-*`, `--api-ssl-*`, `--client-ssl-*`, `--insecure`)
+- Redirecting: `--redirect-port` and `--redirect-to`
+- Custom headers: `--custom-headers`
+- Timeouts: `--timeout` and `--proxy-timeout`
+- Proxy related headers: `--x-forward` and `--change-origin`
+- Rewrites in Location header: `--protocol-rewrite` and `--auto-rewrite`
