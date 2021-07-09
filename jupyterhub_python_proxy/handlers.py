@@ -267,11 +267,11 @@ class ProxyHandler(WebSocketHandler):
             return
 
         self.set_status(response.code)
-        self.write(response.body)
         for key, val in response.headers.get_all():
             if key.lower() not in ("content-length", "transfer-encoding", "content-encoding", "connection"):
                 self.set_header(key, val)
         if response.body:
+            self.write(response.body)
             self.set_header("Content-Length", len(response.body))
         self.finish()
 
