@@ -252,7 +252,11 @@ class ProxyHandler(WebSocketHandler):
         url = await self.get_target_url(path)
         if url is None:
             return
-        req = HTTPRequest(url, follow_redirects=False)
+        req = HTTPRequest(
+            url,
+            headers=dict(self.request.headers.get_all()),
+            follow_redirects=False,
+        )
         client = AsyncHTTPClient()
         try:
             response = await client.fetch(req, raise_error=False)

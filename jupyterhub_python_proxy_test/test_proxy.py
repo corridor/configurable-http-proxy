@@ -146,6 +146,13 @@ class TestProxy(AsyncHTTPTestCase):
         route = self.proxy.get_route("/")
         assert route["last_activity"] > now
 
+    def test_sending_headers(self):
+        resp = self.fetch("/", headers={"testing": "OK"})
+        reply = json.loads(resp.body)
+        print(reply)
+        assert reply["path"] == "/"
+        assert reply["headers"].get("Testing") == "OK"
+
     def test_proxy_request_event_can_modify_header(self):
         pytest.skip("proxy_request event is not supported")
 
