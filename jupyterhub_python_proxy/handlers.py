@@ -138,7 +138,11 @@ class ProxyHandler(WebSocketHandler):
     async def handle_proxy_error(self, code, err):
         # Called when proxy itself has an error so far, just 404 for no target and 503 for target not responding.
         # Custom error server gets `/CODE?url=/escapedUrl/`, e.g. /404?url=%2Fuser%2Ffoo
-        self.proxy.log.error(f"{code} {self.request.method} {self.request.path} {str(err)}")
+        self.proxy.log.error(f"{code} {self.request.method} {self.request.path} {str(err or '')}")
+
+        if self.ws_connection:
+            self.proxy.log.debug("Socket error, no response to send")
+            return
 
         if self.proxy.error_target:
             error_target = urllib.parse.urlparse(self.proxy.error_target)
@@ -316,7 +320,7 @@ class ProxyHandler(WebSocketHandler):
         try:
             self.ws_client = await websocket_connect(url, on_message_callback=write)
         except Exception as err:
-            self.proxy.log.error(f"503 {self.request.method} {self.request.path} {str(err)}")
+            await self.handle_proxy_error(503, err)
             raise
 
     def on_message(self, message):
