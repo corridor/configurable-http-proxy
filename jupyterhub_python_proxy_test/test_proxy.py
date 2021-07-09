@@ -3,6 +3,7 @@ import json
 import os
 
 import pytest
+from tornado.httpclient import HTTPClientError, HTTPRequest
 from tornado.httpserver import HTTPServer
 from tornado.testing import AsyncHTTPTestCase, bind_unused_port, get_async_test_timeout, gen_test
 from tornado.web import Application, RequestHandler
@@ -143,9 +144,10 @@ class TestProxy(AsyncHTTPTestCase):
     @gen_test
     def test_basic_websocket_request(self):
         now = datetime.datetime.now()
-        ws_client = yield websocket_connect(self.get_url("/").replace("http:", "ws:"))
         route = self.proxy.get_route("/")
         assert route["last_activity"] <= now
+
+        ws_client = yield websocket_connect(self.get_url("/").replace("http:", "ws:"))
 
         ws_client.write_message("hi")
         response = yield ws_client.read_message()
@@ -302,8 +304,8 @@ class TestProxy(AsyncHTTPTestCase):
         self.proxy._routes.update("/missing", {"last_activity": now})
 
         # fail a websocket activity
-        # NOTE: Shouldn't this have thrown an error ?
-        yield websocket_connect(self.get_url("/missing/ws").replace("http:", "ws:"))
+        with pytest.raises(HTTPClientError, match="HTTP 503: Service Unavailable"):
+            yield websocket_connect(self.get_url("/missing/ws").replace("http:", "ws:"))
 
         # expect an error, since there is no websocket handler - check last_activity was not updated
         route = self.proxy.get_route("/missing")
@@ -412,3 +414,25 @@ class TestProxy(AsyncHTTPTestCase):
         assert resp.code == 404
         assert "text/html" in resp.headers["content-type"]
         assert b"<title>404: Not Found</title>" in resp.body
+
+    @gen_test
+    def test_target_not_found_websocket(self):
+        self.proxy.remove_route("/")
+
+        with pytest.raises(HTTPClientError, match="HTTP 404: Not Found"):
+            yield websocket_connect(self.get_url("/unknown").replace("http:", "ws:"))
+
+    @gen_test
+    def test_websocket_failure_due_to_request(self):
+        # The tornado websocket internally checks for: header[ORIGIN] == header[HOST] if both the headers are present.
+        # This test checks that we close the ws_client correctly in case of such errors
+
+        with pytest.raises(HTTPClientError, match="HTTP 403: Forbidden"):
+            req = HTTPRequest(
+                self.get_url("/").replace("http:", "ws:"),
+                headers={
+                    "Origin": "http://origin.com",
+                    "Host": "http://host.com",
+                },
+            )
+            ws_client = yield websocket_connect(req)

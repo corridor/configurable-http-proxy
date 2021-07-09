@@ -5,7 +5,7 @@ import typing
 import urllib.parse
 
 import dateutil.parser
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler, websocket_connect
 
@@ -277,11 +277,38 @@ class ProxyHandler(WebSocketHandler):
 
     async def get(self, path=None):
         if self.request.headers.get("Upgrade", "").lower() == "websocket":
-            await WebSocketHandler.get(self, path)
-            return
+            url = await self.get_target_url(path)
+            if url is None:
+                return
+            # NOTE: We need to start the ws-client before we run WebSocketHandler
+            #       cause if the websocket cannot connect - we want to throw an error
+            #       Maybe we should do this in get_websocket_protocol() instead as that runs after
+            #       the header level checks
+            await self.start_ws_client(path)
+            if not self.ws_client:
+                # Creating the websocket client to our target failed - so, don't establish a websocket connection
+                return
+
+            try:
+                await WebSocketHandler.get(self, path)
+                print('AFTER WebSocketHandler.get')
+            except Exception:
+                # Cleanup dangling ws-client connection if we are not upgrading to a websocket
+                self.ws_client.close()
+                self.ws_client = None
+                raise
+
+            if self.get_status() != 101:
+                print('AFTER WebSocketHandler.get - status = ', self.get_status())
+                # Cleanup dangling ws-client connection if we are not upgrading to a websocket
+                self.ws_client.close()
+                self.ws_client = None
+
         elif self.health_check():
-            return
-        return await self.call_proxy(path=path)
+            pass
+
+        else:
+            await self.call_proxy(path=path)
 
     async def _proxy_method(self, *args, **kwargs) -> None:
         return await self.call_proxy(*args, **kwargs)
@@ -293,7 +320,7 @@ class ProxyHandler(WebSocketHandler):
     put = _proxy_method
     options = _proxy_method
 
-    async def open(self, path=None):
+    async def start_ws_client(self, path=None):
         self.closed = False
 
         url = await self.get_target_url(path)
@@ -317,8 +344,20 @@ class ProxyHandler(WebSocketHandler):
                 if self.ws_client and msg is not None:
                     self.write_message(msg, binary=isinstance(msg, bytes))
 
+        req = HTTPRequest(
+            url,
+            method=self.request.method,
+            headers=dict(self.request.headers.get_all()),
+            body=self.request.body,
+            follow_redirects=False,
+            allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
+        )
         try:
-            self.ws_client = await websocket_connect(url, on_message_callback=write)
+            self.ws_client = await websocket_connect(req, on_message_callback=write)
+        except HTTPClientError as err:
+            self.set_status(err.code)
+            self.write(err.message)
+            self.finish()
         except Exception as err:
             await self.handle_proxy_error(503, err)
             raise
