@@ -118,7 +118,7 @@ class ProxyHandler(WebSocketHandler):
         super().initialize(**kwargs)
         self.proxy = proxy
         self.target = None
-        self.ws = None
+        self.ws_client = None
         self.closed = True
 
     def write_error(self, status_code, **kwargs):
@@ -156,9 +156,9 @@ class ProxyHandler(WebSocketHandler):
             #     target.ca = this.options.clientSsl.ca;
             # }
 
-            client = AsyncHTTPClient()
+            http_client = AsyncHTTPClient()
             try:
-                response = await client.fetch(error_target.geturl(), raise_error=True, method="GET")
+                response = await http_client.fetch(error_target.geturl(), raise_error=True, method="GET")
             except Exception as err2:
                 self.proxy.log.error(f"Failed to get custom error page: {err2}")
                 self.handle_proxy_error_default(code, err)
@@ -255,9 +255,9 @@ class ProxyHandler(WebSocketHandler):
             follow_redirects=False,
             allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
         )
-        client = AsyncHTTPClient()
+        http_client = AsyncHTTPClient()
         try:
-            response = await client.fetch(req, raise_error=False)
+            response = await http_client.fetch(req, raise_error=False)
         except Exception as err:
             await self.handle_proxy_error(503, err)
             return
@@ -301,35 +301,35 @@ class ProxyHandler(WebSocketHandler):
 
         def write(msg):
             if self.closed:
-                if self.ws:
-                    self.ws.close()
-                    self.ws = None
+                if self.ws_client:
+                    self.ws_client.close()
+                    self.ws_client = None
             else:
                 # update timestamp on any reply data
                 prefix = self.target["prefix"] if self.target else ""
                 if prefix:
                     self.proxy.update_last_activity(prefix)
 
-                if self.ws and msg is not None:
+                if self.ws_client and msg is not None:
                     self.write_message(msg, binary=isinstance(msg, bytes))
 
         try:
-            self.ws = await websocket_connect(url, on_message_callback=write)
+            self.ws_client = await websocket_connect(url, on_message_callback=write)
         except Exception as err:
             self.proxy.log.error(f"503 {self.request.method} {self.request.path} {str(err)}")
             raise
 
     def on_message(self, message):
-        if self.ws:
+        if self.ws_client:
             # update timestamp on any request data
             prefix = self.target["prefix"] if self.target else ""
             if prefix:
                 self.proxy.update_last_activity(prefix)
 
-            self.ws.write_message(message)
+            self.ws_client.write_message(message)
 
     def on_close(self):
-        if self.ws:
-            self.ws.close()
-            self.ws = None
+        if self.ws_client:
+            self.ws_client.close()
+            self.ws_client = None
             self.closed = True
