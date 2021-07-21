@@ -33,3 +33,4 @@ The following options are not supported (yet):
 - Timeouts: `--timeout` and `--proxy-timeout`
 - Proxy related headers: `--x-forward` and `--change-origin`
 - Rewrites in Location header: `--protocol-rewrite` and `--auto-rewrite`
+- Metrics server: `--metrics-port` and `--metrics-ip`
