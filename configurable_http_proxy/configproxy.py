@@ -41,14 +41,14 @@ class PythonProxy:
             self.log = log
 
         self._routes = load_storage(self.options)
-        self.include_prefix = self.options.get("include_prefix") or True
-        self.prepend_path = self.options.get("prepend_path") or True
+        self.include_prefix = self.options.get("include_prefix", True)
+        self.prepend_path = self.options.get("prepend_path", True)
         self.headers = self.options.get("headers")
-        self.host_routing = self.options.get("host_routing") or False
+        self.host_routing = self.options.get("host_routing", False)
         self.timeout = self.options.get("timeout")
         self.proxy_timeout = self.options.get("proxy_timeout")
         self.custom_headers = dict(self.options.get("custom_headers") or {})
-        self.x_forward = self.options.get("x_forward")
+        self.x_forward = self.options.get("x_forward", True)
         self.error_target = self.options.get("error_target")
         if self.error_target and not self.error_target.endswith("/"):
             self.error_target = self.error_target + "/"  # ensure trailing slash
