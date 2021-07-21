@@ -51,7 +51,7 @@ class PythonProxy:
         self.error_path = self.options.get("error_path", os.path.join(BASE_PATH, "templates"))
 
         self.default_target = self.options.get("default_target")
-        if self.options.get("default_target"):
+        if self.default_target:
             self.add_route("/", {"target": self.default_target})
 
         # handle API requests
