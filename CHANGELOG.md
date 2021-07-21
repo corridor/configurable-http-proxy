@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.1
+
+- Bugfix for issues in adding `x-forward` headers
+
 ## v0.2.0
 
 This releases increases our compatiblity with jupyterhub/configurable-http-proxy.
