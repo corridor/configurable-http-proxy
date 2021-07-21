@@ -436,3 +436,18 @@ class TestProxy(AsyncHTTPTestCase):
                 },
             )
             ws_client = yield websocket_connect(req)
+
+    def test_custom_headers(self):
+        self.proxy.custom_headers = {"testing_from_custom": "OK"}
+        resp = self.fetch("/", headers={"testing_from_request": "OK"})
+        reply = json.loads(resp.body)
+        assert reply["path"] == "/"
+        assert reply["headers"].get("Testing_from_request") == "OK"
+        assert reply["headers"].get("Testing_from_custom") == "OK"
+
+    def test_custom_headers_higher_priority(self):
+        self.proxy.custom_headers = {"testing": "from_custom"}
+        resp = self.fetch("/", headers={"testing": "from_request"})
+        reply = json.loads(resp.body)
+        assert reply["path"] == "/"
+        assert reply["headers"].get("Testing") == "from_custom"

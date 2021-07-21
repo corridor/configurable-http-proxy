@@ -22,6 +22,7 @@ The following items are supported:
 - Error management using error_path and error_target
 - Prepend path or include prefix
 - Timeouts
+- Custom Headers
 - Customizable storage backends
 - PID file writing
 - Logging
@@ -30,7 +31,6 @@ The following options are not supported (yet):
 
 - SSL for proxy, client, API is not available (`--ssl-*`, `--api-ssl-*`, `--client-ssl-*`, `--insecure`)
 - Redirecting: `--redirect-port` and `--redirect-to`
-- Custom headers: `--custom-headers`
 - Proxy related headers: `--x-forward` and `--change-origin`
 - Rewrites in Location header: `--protocol-rewrite` and `--auto-rewrite`
 - Metrics server: `--metrics-port` and `--metrics-ip`

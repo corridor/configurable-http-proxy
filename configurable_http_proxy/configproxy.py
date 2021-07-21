@@ -48,6 +48,7 @@ class PythonProxy:
         self.timeout = self.options.get("timeout")
         self.proxy_timeout = self.options.get("proxy_timeout")
         self.error_target = self.options.get("error_target")
+        self.custom_headers = dict(self.options.get("custom_headers") or {})
         if self.error_target and not self.error_target.endswith("/"):
             self.error_target = self.error_target + "/"  # ensure trailing slash
         self.error_path = self.options.get("error_path", os.path.join(BASE_PATH, "templates"))

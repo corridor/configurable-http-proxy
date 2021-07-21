@@ -15,6 +15,18 @@ def print_version(ctx, param, value):
     click.echo(__version__)
 
 
+class HeaderParamType(click.ParamType):
+    # This is a paramtype similar to TupleType provided by click - but we handle `--param key:value`
+    # instead of `--param key value`
+    name = "header"
+
+    def convert(self, value, param, ctx):
+        out = tuple([i.strip() for i in value.split(":")])
+        if len(out) != 2:
+            self.fail(f"A single colon was expected in custom header: {value}", param, ctx)
+        return out
+
+
 @click.command()
 @click.version_option(__version__)
 @click.option("--ip", type=click.STRING, help="Public-facing IP of the proxy")
@@ -91,7 +103,8 @@ def print_version(ctx, param, value):
 )
 @click.option(
     "--custom-header",
-    type=click.STRING,
+    type=HeaderParamType(),
+    multiple=True,
     help="Custom header to add to proxied requests. Use same option for multiple headers (--custom-header k1:v1 --custom-header k2:v2) (default: [])",
 )
 @click.option("--insecure", help="Disable SSL cert verification")
@@ -218,7 +231,7 @@ def main(**args):
             "auth_token": os.environ.get("CONFIGPROXY_AUTH_TOKEN"),
             # "redirect_port": args["redirect_port"],
             # "redirect_to": args["redirect_to"],
-            # "headers": args["custom_header"],
+            "custom_headers": dict(args["custom_header"]),
             "timeout": args["timeout"],
             "proxy_timeout": args["proxy_timeout"],
         }
@@ -232,7 +245,6 @@ def main(**args):
     for key in [
         "redirect_port",
         "redirect_to",
-        "custom_header",
         "insecure",
         "x_forward",
         "auto_rewrite",

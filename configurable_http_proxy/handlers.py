@@ -255,10 +255,12 @@ class ProxyHandler(WebSocketHandler):
         return False
 
     def _get_proxy_request(self, url):
+        headers = dict(self.request.headers.get_all())
+        headers.update(self.proxy.custom_headers)
         return HTTPRequest(
             url,
             method=self.request.method,
-            headers=dict(self.request.headers.get_all()),
+            headers=headers,
             body=self.request.body,
             follow_redirects=False,
             allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
