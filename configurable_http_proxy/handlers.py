@@ -262,8 +262,9 @@ class ProxyHandler(WebSocketHandler):
 
         # Add x-forward headers if required
         if self.proxy.x_forward:
-            encrypted = self.request.url.partition(":")[0] in {"https", "wss"}
+            encrypted = self.request.uri.partition(":")[0] in {"https", "wss"}
             host = headers.get("host")
+            port = None
             if host:
                 port = re.match(".*?:([0-9]+)$", host)
                 if port:
@@ -273,13 +274,13 @@ class ProxyHandler(WebSocketHandler):
 
             fwd_values = {
                 "for": self.request.remote_ip,
-                "port": port,
-                "proto": encrypted,
+                "port": str(port),
+                "proto": 'https' if encrypted else 'http',
             }
 
             for key in ["for", "port", "proto"]:
                 key_header = f"x-forwarded-{key}"
-                headers[key_header] = ",".join(headers.get(key_header, ""), fwd_values[key])
+                headers[key_header] = ",".join([headers.get(key_header, ""), fwd_values[key]])
 
             headers["x-forwarded-host"] = headers.get("x-forwarded-host") or headers.get("host") or ""
 
