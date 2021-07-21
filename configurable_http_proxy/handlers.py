@@ -291,7 +291,6 @@ class ProxyHandler(WebSocketHandler):
 
             try:
                 await WebSocketHandler.get(self, path)
-                print('AFTER WebSocketHandler.get')
             except Exception:
                 # Cleanup dangling ws-client connection if we are not upgrading to a websocket
                 self.ws_client.close()
@@ -299,7 +298,6 @@ class ProxyHandler(WebSocketHandler):
                 raise
 
             if self.get_status() != 101:
-                print('AFTER WebSocketHandler.get - status = ', self.get_status())
                 # Cleanup dangling ws-client connection if we are not upgrading to a websocket
                 self.ws_client.close()
                 self.ws_client = None
