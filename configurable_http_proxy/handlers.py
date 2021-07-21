@@ -5,6 +5,7 @@ import typing
 import urllib.parse
 
 import dateutil.parser
+from tornado.gen import with_timeout
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.web import RequestHandler, HTTPError
 from tornado.websocket import WebSocketHandler, websocket_connect
@@ -17,6 +18,13 @@ def json_converter(val):
     if isinstance(val, (datetime.datetime, datetime.date)):
         return val.isoformat()
     raise TypeError(f"Object of type {type(val).__name__} is not JSON serializable")
+
+
+async def apply_timeout(timeout, future):
+    if timeout is None:
+        return await future
+    else:
+        return await with_timeout(datetime.timedelta(seconds=timeout), future)
 
 
 class APIHandler(RequestHandler):
@@ -313,7 +321,7 @@ class ProxyHandler(WebSocketHandler):
             await self.call_proxy(path=path)
 
     async def _proxy_method(self, *args, **kwargs) -> None:
-        return await self.call_proxy(*args, **kwargs)
+        return await apply_timeout(self.proxy.timeout, self.call_proxy(*args, **kwargs))
 
     head = _proxy_method
     post = _proxy_method
@@ -348,7 +356,9 @@ class ProxyHandler(WebSocketHandler):
 
         req = self._get_proxy_request(url)
         try:
-            self.ws_client = await websocket_connect(req, on_message_callback=write)
+            self.ws_client = await apply_timeout(
+                self.proxy.timeout, websocket_connect(req, on_message_callback=write)
+            )
         except HTTPClientError as err:
             self.set_status(err.code)
             self.write(err.message)

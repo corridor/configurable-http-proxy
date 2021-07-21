@@ -45,6 +45,7 @@ class PythonProxy:
         self.prepend_path = self.options.get("prepend_path") or True
         self.headers = self.options.get("headers")
         self.host_routing = self.options.get("host_routing") or False
+        self.timeout = self.options.get("timeout")
         self.proxy_timeout = self.options.get("proxy_timeout")
         self.error_target = self.options.get("error_target")
         if self.error_target and not self.error_target.endswith("/"):
