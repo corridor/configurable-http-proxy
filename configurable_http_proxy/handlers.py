@@ -246,19 +246,23 @@ class ProxyHandler(WebSocketHandler):
             return True
         return False
 
-    async def call_proxy(self, path=None):
-        url = await self.get_target_url(path)
-        if url is None:
-            return
-
-        req = HTTPRequest(
+    def _get_proxy_request(self, url):
+        return HTTPRequest(
             url,
             method=self.request.method,
             headers=dict(self.request.headers.get_all()),
             body=self.request.body,
             follow_redirects=False,
             allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
+            request_timeout=self.proxy.proxy_timeout,
         )
+
+    async def call_proxy(self, path=None):
+        url = await self.get_target_url(path)
+        if url is None:
+            return
+
+        req = self._get_proxy_request(url)
         http_client = AsyncHTTPClient()
         try:
             response = await http_client.fetch(req, raise_error=False)
@@ -342,14 +346,7 @@ class ProxyHandler(WebSocketHandler):
                 if self.ws_client and msg is not None:
                     self.write_message(msg, binary=isinstance(msg, bytes))
 
-        req = HTTPRequest(
-            url,
-            method=self.request.method,
-            headers=dict(self.request.headers.get_all()),
-            body=self.request.body,
-            follow_redirects=False,
-            allow_nonstandard_methods=True,  # Needed to allow body for GET, OPTIONS, DELETE
-        )
+        req = self._get_proxy_request(url)
         try:
             self.ws_client = await websocket_connect(req, on_message_callback=write)
         except HTTPClientError as err:

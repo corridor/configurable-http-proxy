@@ -30,7 +30,7 @@ The following options are not supported (yet):
 - SSL for proxy, client, API is not available (`--ssl-*`, `--api-ssl-*`, `--client-ssl-*`, `--insecure`)
 - Redirecting: `--redirect-port` and `--redirect-to`
 - Custom headers: `--custom-headers`
-- Timeouts: `--timeout` and `--proxy-timeout`
+- Timeouts: `--timeout`
 - Proxy related headers: `--x-forward` and `--change-origin`
 - Rewrites in Location header: `--protocol-rewrite` and `--auto-rewrite`
 - Metrics server: `--metrics-port` and `--metrics-ip`

@@ -219,16 +219,18 @@ def main(**args):
             # "redirect_port": args["redirect_port"],
             # "redirect_to": args["redirect_to"],
             # "headers": args["custom_header"],
-            # "timeout": args["timeout"],
-            # "proxy_timeout": args["proxy_timeout"],
+            "proxy_timeout": args["proxy_timeout"],
         }
     )
+    if options["proxy_timeout"] is not None:
+        # We take in proxy-timeout in millisec in CLI and convert it to seconds
+        options["proxy_timeout"] = options["proxy_timeout"] / 1000.0
+
     for key in [
         "redirect_port",
         "redirect_to",
         "custom_header",
         "timeout",
-        "proxy_timeout",
         "insecure",
         "x_forward",
         "auto_rewrite",
