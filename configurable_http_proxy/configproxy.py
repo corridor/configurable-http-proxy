@@ -47,8 +47,9 @@ class PythonProxy:
         self.host_routing = self.options.get("host_routing") or False
         self.timeout = self.options.get("timeout")
         self.proxy_timeout = self.options.get("proxy_timeout")
-        self.error_target = self.options.get("error_target")
         self.custom_headers = dict(self.options.get("custom_headers") or {})
+        self.x_forward = self.options.get("x_forward")
+        self.error_target = self.options.get("error_target")
         if self.error_target and not self.error_target.endswith("/"):
             self.error_target = self.error_target + "/"  # ensure trailing slash
         self.error_path = self.options.get("error_path", os.path.join(BASE_PATH, "templates"))

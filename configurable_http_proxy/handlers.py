@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import re
 import typing
 import urllib.parse
 
@@ -255,8 +256,33 @@ class ProxyHandler(WebSocketHandler):
         return False
 
     def _get_proxy_request(self, url):
+        # Add custom-headers if required
         headers = dict(self.request.headers.get_all())
         headers.update(self.proxy.custom_headers)
+
+        # Add x-forward headers if required
+        if self.proxy.x_forward:
+            encrypted = self.request.url.partition(":")[0] in {"https", "wss"}
+            host = headers.get("host")
+            if host:
+                port = re.match(".*?:([0-9]+)$", host)
+                if port:
+                    port = int(port.group(1))
+            if port is None:  # Detect the port based on default ports fo scheme
+                port = 433 if encrypted else 80
+
+            fwd_values = {
+                "for": self.request.remote_ip,
+                "port": port,
+                "proto": encrypted,
+            }
+
+            for key in ["for", "port", "proto"]:
+                key_header = f"x-forwarded-{key}"
+                headers[key_header] = ",".join(headers.get(key_header, ""), fwd_values[key])
+
+            headers["x-forwarded-host"] = headers.get("x-forwarded-host") or headers.get("host") or ""
+
         return HTTPRequest(
             url,
             method=self.request.method,

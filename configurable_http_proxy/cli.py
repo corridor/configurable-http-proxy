@@ -89,13 +89,27 @@ class HeaderParamType(click.ParamType):
     "--redirect-to", type=click.INT, help="Redirect HTTP requests from --redirect-port to this port"
 )
 @click.option("--pid-file", type=click.Path(), help="Write our PID to a file")
-@click.option("--x-forward/--no-x-forward", help="Don't add 'X-forward-' headers to proxied requests")
-@click.option("--prepend-path/--no-prepend-path", help="Avoid prepending target paths to proxied requests")
 @click.option(
-    "--include-prefix/--no-include-prefix", help="Don't include the routing prefix in proxied requests"
+    "--x-forward/--no-x-forward",
+    default=True,
+    help="Don't add 'X-forward-' headers to proxied requests",
+)
+@click.option(
+    "--prepend-path/--no-prepend-path",
+    default=True,
+    help="Avoid prepending target paths to proxied requests",
+)
+@click.option(
+    "--include-prefix/--no-include-prefix",
+    default=True,
+    help="Don't include the routing prefix in proxied requests",
 )
 @click.option("--auto-rewrite", help="Rewrite the Location header host/port in redirect responses")
-@click.option("--change-origin", help="Changes the origin of the host header to the target URL")
+@click.option(
+    "--change-origin/--no-change-origin",
+    default=False,
+    help="Changes the origin of the host header to the target URL",
+)
 @click.option(
     "--protocol-rewrite",
     type=click.STRING,
@@ -246,9 +260,7 @@ def main(**args):
         "redirect_port",
         "redirect_to",
         "insecure",
-        "x_forward",
         "auto_rewrite",
-        "change_origin",
         "protocol_rewrite",
     ]:
         if args.get(key):
@@ -266,7 +278,7 @@ def main(**args):
     # passthrough for http-proxy options
     if args["insecure"]:
         options["secure"] = False
-    options["xfwd"] = args["x_forward"]
+    options["x_forward"] = args["x_forward"]
     options["prepend_path"] = args["prepend_path"]
     options["include_prefix"] = args["include_prefix"]
     if args.get("auto_rewrite"):
