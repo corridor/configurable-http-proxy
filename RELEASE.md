@@ -21,6 +21,7 @@ git push origin main --tags
 To release the package on PyPI, run:
 
 ```bash
+venv/bin/pip install wheel twine
 venv/bin/python setup.py bdist_wheel sdist
 twine upload dist/*
 ```
