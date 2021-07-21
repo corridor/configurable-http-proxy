@@ -28,4 +28,11 @@ if __name__ == "__main__":
                 "configurable-http-proxy = configurable_http_proxy.cli:main",
             ],
         },
+        classifiers=[
+            "Intended Audience :: Developers",
+            "Topic :: Internet :: Proxy Servers",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3 :: Only",
+            "Operating System :: OS Independent",
+        ],
     )
