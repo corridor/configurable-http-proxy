@@ -55,11 +55,9 @@ class RedirectingTargetHandler(RequestHandler):
         self.redirect_to = redirect_to
 
     def get(self, path=None):
-        print("RedirectingTargetHandler - get -- starting")
         self.set_header("Location", self.redirect_to)
         self.set_status(301)
         self.finish()
-        print("RedirectingTargetHandler - get -- ending")
 
 
 class ErrorTargetHandler(RequestHandler):
@@ -165,7 +163,6 @@ class TestProxy(AsyncHTTPTestCase):
     def test_sending_headers(self):
         resp = self.fetch("/", headers={"testing": "OK"})
         reply = json.loads(resp.body)
-        print(reply)
         assert reply["path"] == "/"
         assert reply["headers"].get("Testing") == "OK"
 
