@@ -32,6 +32,24 @@ class TargetHandler(WebSocketHandler):
         }
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
+        if self.get_argument("with_set_cookie"):
+            # Values that set-cookie can take:
+            # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+            values = {
+                "Secure": "",
+                "HttpOnly": "",
+                "SameSite": "None",
+                "Path": "/",
+                "Domain": "example.com",
+                "Max-Age": "999999",
+                "Expires": "Fri, 01 Oct 2020 06:12:16 GMT",  # .strftime('%a, %d %b %Y %H:%M:%S %Z')
+            }
+            self.add_header("Set-Cookie", "key=val")
+            for name, val in values.items():
+                self.add_header("Set-Cookie", f"{name}_key=val; {name}={val}")
+            combined = "; ".join((f"{name}={val}" for name, val in values.items()))
+            self.add_header("Set-Cookie", f"combined_key=val; {combined}")
+
         self.write(json.dumps(reply))
         self.finish()
 
@@ -448,3 +466,20 @@ class TestProxy(AsyncHTTPTestCase):
         reply = json.loads(resp.body)
         assert reply["path"] == "/"
         assert reply["headers"].get("Testing") == "from_custom"
+
+    def test_receiving_headers_setcookie(self):
+        # When the same header has multiple values - it needs to be handled correctly.
+        resp = self.fetch("/?with_set_cookie=1")
+        headers = list(resp.headers.get_all())
+        cookies = {}
+        for header_name, header in headers:
+            if header_name.lower() !='set-cookie':
+                continue
+            key, val = header.split("=", 1)
+            cookies[key] = val
+        assert "key" in cookies
+        assert cookies['key'] == 'val'
+        assert "combined_key" in cookies
+        assert cookies['combined_key'] == 'val; Secure=; HttpOnly=; SameSite=None; Path=/; Domain=example.com; Max-Age=999999; Expires=Fri, 01 Oct 2020 06:12:16 GMT'
+        for prefix in ["Secure", "HttpOnly", "SameSite", "Path", "Domain", "Max-Age", "Expires"]:
+            assert prefix + "_key" in cookies

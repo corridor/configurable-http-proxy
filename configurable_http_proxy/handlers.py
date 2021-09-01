@@ -308,9 +308,17 @@ class ProxyHandler(WebSocketHandler):
             return
 
         self.set_status(response.code)
+        # NOTE: Is there a better way to handle this part ? We are currently using the private _headers
+        #       In tornado 6 - This is Server, Content-Type, Date
+        existing_headers = {h[0].lower() for h in self._headers.get_all()}
         for key, val in response.headers.get_all():
-            if key.lower() not in ("content-length", "transfer-encoding", "content-encoding", "connection"):
+            if key.lower() in ("content-length", "transfer-encoding", "content-encoding", "connection"):
+                # Ignore these headers
+                continue
+            if key.lower() in existing_headers:  # Replace existing values from the proxy server
                 self.set_header(key, val)
+            else:
+                self.add_header(key, val)
         if response.body:
             self.write(response.body)
             self.set_header("Content-Length", len(response.body))
