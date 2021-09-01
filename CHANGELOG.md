@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.2
+
+- Bugfix to handle headers with multiple values (For example: Set-Cookie)
+
 ## v0.2.1
 
 - Bugfix for issues in adding `x-forward` headers
