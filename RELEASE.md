@@ -22,6 +22,7 @@ To release the package on PyPI, run:
 
 ```bash
 venv/bin/pip install wheel twine
+rm -rf build dist  # Cleanup
 venv/bin/python setup.py bdist_wheel sdist
-twine upload dist/*
+venv/bin/twine upload dist/*
 ```
