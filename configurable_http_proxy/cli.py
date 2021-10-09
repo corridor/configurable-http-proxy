@@ -126,7 +126,8 @@ class HeaderParamType(click.ParamType):
 @click.option(
     "--log-level",
     type=click.Choice(
-        [logging.getLevelName(i) for i in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR)]
+        [logging.getLevelName(i) for i in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR)],
+        case_sensitive=False,
     ),
     help='Log level (debug, info, warning, error) (default: "info")',
 )
