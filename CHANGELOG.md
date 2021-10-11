@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.2.3
+
+- Fix support for `c.ConfigurableHTTPProxy.debug=True` by allowing lowercase --log-level
+  arguments.
+
 ## v0.2.2
 
 - Bugfix to handle headers with multiple values (For example: Set-Cookie)
