@@ -8,9 +8,9 @@ if __name__ == "__main__":
     setup(
         name="configurable-http-proxy",
         url="https://github.com/AbdealiJK/configurable-http-proxy",
-        author="AbdealiJK",
-        author_email="abdealikothari@gmail.com",
-        license="MIT",
+        author="Corridor Platforms",
+        author_email="postmaster@corridorplatforms.com",
+        license="Apache License 2.0",
         description="A python implementation of configurable-http-proxy",
         long_description=open(os.path.join(BASE_PATH, "README.md")).read(),
         long_description_content_type="text/markdown",
@@ -34,5 +34,6 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3 :: Only",
             "Operating System :: OS Independent",
+            "OSI Approved :: Apache Software License",
         ],
     )
