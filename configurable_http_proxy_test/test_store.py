@@ -1,9 +1,14 @@
+import os
+
+from configurable_http_proxy.dbstore import DatabaseStore
 from configurable_http_proxy.store import MemoryStore
 
 
-class TestMemoryStore:
-    def setup_method(self, method):
-        self.subject = MemoryStore()
+class StoreTestsMixin:
+    """
+    Test cases for the storage
+    This allows to reuse tests for MemoryStore and DatabaseStore
+    """
 
     def test_get(self):
         self.subject.add("/myRoute", {"test": "value"})
@@ -73,3 +78,15 @@ class TestMemoryStore:
     def test_has_route_path_not_found(self):
         route = self.subject.get("/wut")
         assert route is None
+
+
+class TestMemoryStore(StoreTestsMixin):
+    def setup_method(self, method):
+        self.subject = MemoryStore()
+
+
+class TestDataBaseStore(StoreTestsMixin):
+    def setup_method(self, method):
+        os.environ["CHP_DATABASE_URL"] = "sqlite:///chp_test.sqlite"
+        self.subject = DatabaseStore()
+        self.subject.clean()
