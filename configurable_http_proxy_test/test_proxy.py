@@ -371,7 +371,7 @@ class TestProxy(AsyncHTTPTestCase):
 
     def test_redirect_location_untouched_without_rewrite_option(self):
         redirect_to = "http://foo.com:12345/whatever"
-        target_url = self._add_target_route(
+        self._add_target_route(
             "/external/urlpath",
             target_path="/internal/urlpath/",
             handler=RedirectingTargetHandler,
@@ -450,7 +450,7 @@ class TestProxy(AsyncHTTPTestCase):
                     "Host": "http://host.com",
                 },
             )
-            ws_client = yield websocket_connect(req)
+            yield websocket_connect(req)
 
     def test_custom_headers(self):
         self.proxy.custom_headers = {"testing_from_custom": "OK"}
@@ -473,13 +473,16 @@ class TestProxy(AsyncHTTPTestCase):
         headers = list(resp.headers.get_all())
         cookies = {}
         for header_name, header in headers:
-            if header_name.lower() !='set-cookie':
+            if header_name.lower() != 'set-cookie':
                 continue
             key, val = header.split("=", 1)
             cookies[key] = val
         assert "key" in cookies
         assert cookies['key'] == 'val'
         assert "combined_key" in cookies
-        assert cookies['combined_key'] == 'val; Secure=; HttpOnly=; SameSite=None; Path=/; Domain=example.com; Max-Age=999999; Expires=Fri, 01 Oct 2020 06:12:16 GMT'
+        assert cookies['combined_key'] == (
+            'val; Secure=; HttpOnly=; SameSite=None; Path=/; Domain=example.com; Max-Age=999999; '
+            'Expires=Fri, 01 Oct 2020 06:12:16 GMT'
+        )
         for prefix in ["Secure", "HttpOnly", "SameSite", "Path", "Domain", "Max-Age", "Expires"]:
             assert prefix + "_key" in cookies
