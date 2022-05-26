@@ -27,6 +27,10 @@ The following items are supported:
 - Customizable storage backends
 - PID file writing
 - Logging
+- Configurable storage backend
+
+The following options are additional (not available in nodejs CHP currently):
+- Ready to use DBMS storage backend
 
 The following options are not supported (yet):
 
@@ -35,3 +39,29 @@ The following options are not supported (yet):
 - Change Origin: `--change-origin`
 - Rewrites in Location header: `--protocol-rewrite` and `--auto-rewrite`
 - Metrics server: `--metrics-port` and `--metrics-ip`
+
+## Database-backed storage backend
+
+Using a SQL DBMS instead of the default in-memory store enables chp to be replicated
+in a High Availability scenario.
+
+To use a SQL DBMS as the storage backend:
+
+1. Install DBMS support
+
+```bash
+$ pip install configurable-http-proxy[sqla]
+```
+
+2. Set the CHP_DATABASE_URL env var to any db URL supported by SQLAlchemy. The default is `sqlite:///chp.sqlite`.
+
+```bash
+$ export CHP_DATABASE_URL="sqlite:///chp.sqlite"
+$ configurable-http-proxy --storage-backend configurable_http_proxy.dbstore.DatabaseStore
+```
+
+3. Optionally you may set the table name by setting the CHP_DATABASE_TABLE. The default is 'chp_routes'
+
+```bash
+$ export CHP_DATABASE_TABLE="chp_routes"
+```

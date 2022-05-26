@@ -19,6 +19,9 @@ if __name__ == "__main__":
         },
         setup_requires=["setuptools_scm"],
         install_requires=open(os.path.join(BASE_PATH, "requirements", "base.txt")).readlines(),
+        extras_require={
+            "sqla": ["dataset"],
+        },
         python_requires=">=3.6",
         include_package_data=True,
         zip_safe=False,

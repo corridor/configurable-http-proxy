@@ -134,3 +134,4 @@ dmypy.json
 
 # Project specific
 configurable_http_proxy/version.txt
+*sqlite*
