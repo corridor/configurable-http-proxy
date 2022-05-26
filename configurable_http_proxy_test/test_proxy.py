@@ -32,7 +32,7 @@ class TargetHandler(WebSocketHandler):
         }
         self.set_status(200)
         self.set_header("Content-Type", "application/json")
-        if self.get_argument("with_set_cookie"):
+        if self.get_argument("with_set_cookie", None):
             # Values that set-cookie can take:
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
             values = {
