@@ -81,14 +81,6 @@ class TestAPI(AsyncHTTPTestCase):
         assert resp.code == 201
         route = self.proxy.get_route("/path")
         assert route["target"] == "http://127.0.0.1:12345"
-
-    def test_post_create_new_route(self):
-        resp = self.fetch(
-            "/api/routes/path", method="POST", body=json.dumps({"target": "http://127.0.0.1:12345"})
-        )
-        assert resp.code == 201
-        route = self.proxy.get_route("/path")
-        assert route["target"] == "http://127.0.0.1:12345"
         assert isinstance(route["last_activity"], datetime.datetime)
 
     def test_post_create_new_route_with_urlescape(self):

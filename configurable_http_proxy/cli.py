@@ -119,7 +119,10 @@ class HeaderParamType(click.ParamType):
     "--custom-header",
     type=HeaderParamType(),
     multiple=True,
-    help="Custom header to add to proxied requests. Use same option for multiple headers (--custom-header k1:v1 --custom-header k2:v2) (default: [])",
+    help=(
+        "Custom header to add to proxied requests. Use same option for multiple headers "
+        "(--custom-header k1:v1 --custom-header k2:v2) (default: [])"
+    ),
 )
 @click.option("--insecure", help="Disable SSL cert verification")
 @click.option("--host-routing", help="Use host routing (host as first level of path)")
@@ -375,7 +378,7 @@ def main(**args):
 
     try:
         IOLoop.current().start()
-    except Exception as err:
+    except Exception:
         if pid_file:  # Cleanup PID file
             log.debug(f"Removing {pid_file}")
             os.remove(pid_file)
