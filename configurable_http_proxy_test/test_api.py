@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 
 from tornado.testing import AsyncHTTPTestCase
 
@@ -7,12 +8,9 @@ from configurable_http_proxy.configproxy import PythonProxy
 from configurable_http_proxy_test.testutil import pytest_regex
 
 
-class TestAPI(AsyncHTTPTestCase):
-    def get_app(self):
-        self.proxy = PythonProxy({"auth_token": "secret"})
-        self.proxy.add_route("/", {"target": "http://127.0.0.1:54321"})
-        return self.proxy.api_app
-
+class APITestsMixin:
+    # test cases for TestAPI
+    # -- this allows to reuse test cases for MemoryStore and DatabaseStore backends
     def fetch(self, path, raise_error=True, with_auth=True, **kwargs):
         headers = kwargs.pop("headers", {})
         if with_auth:
@@ -81,14 +79,6 @@ class TestAPI(AsyncHTTPTestCase):
         assert resp.code == 201
         route = self.proxy.get_route("/path")
         assert route["target"] == "http://127.0.0.1:12345"
-
-    def test_post_create_new_route(self):
-        resp = self.fetch(
-            "/api/routes/path", method="POST", body=json.dumps({"target": "http://127.0.0.1:12345"})
-        )
-        assert resp.code == 201
-        route = self.proxy.get_route("/path")
-        assert route["target"] == "http://127.0.0.1:12345"
         assert isinstance(route["last_activity"], datetime.datetime)
 
     def test_post_create_new_route_with_urlescape(self):
@@ -147,8 +137,28 @@ class TestAPI(AsyncHTTPTestCase):
 
         resp = self.fetch(f"/api/routes?inactiveSince={hour_ago.isoformat()}")
         reply = json.loads(resp.body)
-        assert set(reply.keys()) == {'/yesterday'}
+        assert set(reply.keys()) == {"/yesterday"}
 
         resp = self.fetch(f"/api/routes?inactiveSince={hour_from_now.isoformat()}")
         reply = json.loads(resp.body)
-        assert set(reply.keys()) == {'/', '/today', '/yesterday'}
+        assert set(reply.keys()) == {"/", "/today", "/yesterday"}
+
+
+class TestAPI_MemoryStore(APITestsMixin, AsyncHTTPTestCase):
+    # actual test case
+    def get_app(self):
+        self.proxy = PythonProxy({"auth_token": "secret"})
+        self.proxy.add_route("/", {"target": "http://127.0.0.1:54321"})
+        return self.proxy.api_app
+
+
+class TestAPI_DatabaseStore(APITestsMixin, AsyncHTTPTestCase):
+    def get_app(self):
+        os.environ["CHP_DATABASE_URL"] = "sqlite:///chp_test.sqlite"
+        self.proxy = PythonProxy(
+            {"auth_token": "secret", "storage_backend": "configurable_http_proxy.dbstore.DatabaseStore"}
+        )
+        self.proxy._routes.clean()
+        assert self.proxy._routes.get_all() == {}
+        self.proxy.add_route("/", {"target": "http://127.0.0.1:54321"})
+        return self.proxy.api_app

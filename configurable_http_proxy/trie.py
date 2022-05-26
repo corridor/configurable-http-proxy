@@ -1,5 +1,4 @@
 import typing
-import re
 
 
 def trim_prefix(prefix):
