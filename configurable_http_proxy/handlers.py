@@ -275,7 +275,7 @@ class ProxyHandler(WebSocketHandler):
             fwd_values = {
                 "for": self.request.remote_ip,
                 "port": str(port),
-                "proto": 'https' if encrypted else 'http',
+                "proto": "https" if encrypted else "http",
             }
 
             for key in ["for", "port", "proto"]:

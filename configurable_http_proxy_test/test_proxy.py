@@ -473,16 +473,16 @@ class TestProxy(AsyncHTTPTestCase):
         headers = list(resp.headers.get_all())
         cookies = {}
         for header_name, header in headers:
-            if header_name.lower() != 'set-cookie':
+            if header_name.lower() != "set-cookie":
                 continue
             key, val = header.split("=", 1)
             cookies[key] = val
         assert "key" in cookies
-        assert cookies['key'] == 'val'
+        assert cookies["key"] == "val"
         assert "combined_key" in cookies
-        assert cookies['combined_key'] == (
-            'val; Secure=; HttpOnly=; SameSite=None; Path=/; Domain=example.com; Max-Age=999999; '
-            'Expires=Fri, 01 Oct 2020 06:12:16 GMT'
+        assert cookies["combined_key"] == (
+            "val; Secure=; HttpOnly=; SameSite=None; Path=/; Domain=example.com; Max-Age=999999; "
+            "Expires=Fri, 01 Oct 2020 06:12:16 GMT"
         )
         for prefix in ["Secure", "HttpOnly", "SameSite", "Path", "Domain", "Max-Age", "Expires"]:
             assert prefix + "_key" in cookies

@@ -139,8 +139,8 @@ class TestAPI(AsyncHTTPTestCase):
 
         resp = self.fetch(f"/api/routes?inactiveSince={hour_ago.isoformat()}")
         reply = json.loads(resp.body)
-        assert set(reply.keys()) == {'/yesterday'}
+        assert set(reply.keys()) == {"/yesterday"}
 
         resp = self.fetch(f"/api/routes?inactiveSince={hour_from_now.isoformat()}")
         reply = json.loads(resp.body)
-        assert set(reply.keys()) == {'/', '/today', '/yesterday'}
+        assert set(reply.keys()) == {"/", "/today", "/yesterday"}
