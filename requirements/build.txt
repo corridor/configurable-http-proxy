@@ -1,0 +1,3 @@
+pip>=21  # Need new resolver
+setuptools>=50  # Need manylinux2014 support
+wheel
