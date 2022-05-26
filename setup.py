@@ -18,7 +18,7 @@ if __name__ == "__main__":
             "write_to": "configurable_http_proxy/version.txt",
         },
         setup_requires=["setuptools_scm"],
-        install_requires=open(os.path.join(BASE_PATH, "requirements.txt")).readlines(),
+        install_requires=open(os.path.join(BASE_PATH, "requirements", "base.txt")).readlines(),
         python_requires=">=3.6",
         include_package_data=True,
         zip_safe=False,
