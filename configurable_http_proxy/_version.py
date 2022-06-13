@@ -7,7 +7,7 @@ if version is None:
     try:
         from pkg_resources import get_distribution
 
-        module_name = __name__.split('.', 1)[0]
+        module_name = __name__.split(".", 1)[0]
         version = get_distribution(module_name).version
     except Exception:  # noqa: S110
         pass
@@ -24,6 +24,6 @@ if version is None:
 if version is None:
     # When version.txt file is available - use that
     try:
-        version = open(os.path.join(os.path.dirname(__file__), 'version.txt')).read()
+        version = open(os.path.join(os.path.dirname(__file__), "version.txt")).read()
     except Exception:  # noqa: S110
         pass

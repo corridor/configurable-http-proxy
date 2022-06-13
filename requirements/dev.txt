@@ -3,5 +3,3 @@ jupyterhub
 jupyter
 # Unit tests
 pytest
-# Formatting
-black>=20.8b1
