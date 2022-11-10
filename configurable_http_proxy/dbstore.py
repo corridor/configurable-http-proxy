@@ -41,7 +41,8 @@ class DatabaseStore(BaseStore):
         db_url = os.environ.get("CHP_DATABASE_URL", self.default_db_url)
         db_table = os.environ.get("CHP_DATABASE_TABLE", self.default_db_table)
         self.routes: TableTrie = TableTrie(db_url, table=db_table)
-        log.info(f"Using database {db_url}")
+        log.info("Using DatabaseStore as the storage backend")
+        log.debug(f"DataBaseStore database url is {db_url}")
         for route, data in self.get_all().items():
             log.info(f'Restoring {route} => {data.get("target", "<no target>")}')
 
