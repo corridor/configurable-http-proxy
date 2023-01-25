@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.3.0
+
+- Maintenance for this package has moved to Corridor
+- Black is now used for formatting the code
+- Github actions for test cases - Thanks to @miraculixx
+- Support for SQL backend with sqlalchemy - Thanks to @miraculixx
+
 ## v0.2.3
 
 - Fix support for `c.ConfigurableHTTPProxy.debug=True` by allowing lowercase --log-level
