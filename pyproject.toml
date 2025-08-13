@@ -1,3 +1,53 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",  # Needed for setuptools-scm support
+    "setuptools-scm>8",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "configurable-http-proxy"
+dynamic = ["version"]
+description = "A python implementation of configurable-http-proxy"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "Corridor Platforms", email = "postmaster@corridorplatforms.com"}
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Internet :: Proxy Servers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+dependencies = [
+    "tornado",
+    "click",
+    "python-dateutil",
+]
+
+[project.optional-dependencies]
+sql = ["dataset"]
+
+[project.urls]
+Homepage = "https://github.com/corridor/configurable-http-proxy"
+Repository = "https://github.com/corridor/configurable-http-proxy"
+
+[project.scripts]
+configurable-http-proxy = "configurable_http_proxy.cli:main"
+
+[tool.setuptools]
+packages = ["configurable_http_proxy"]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.package-data]
+configurable_http_proxy = ["*"]
+
+[tool.setuptools_scm]
+
 [tool.ruff]
 line-length = 110
 output-format = "grouped"
