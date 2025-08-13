@@ -6,7 +6,7 @@ written in nodejs. It is meant to be a drop in replacement.
 
 ## Install
 
-Prerequisite: Python 3.6+
+Prerequisite: Python 3.8+
 
 ```bash
 pip install configurable-http-proxy
