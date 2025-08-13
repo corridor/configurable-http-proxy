@@ -18,7 +18,11 @@ if __name__ == "__main__":
             "write_to": "configurable_http_proxy/version.txt",
         },
         setup_requires=["setuptools_scm"],
-        install_requires=open(os.path.join(BASE_PATH, "requirements", "base.txt")).readlines(),
+        install_requires=[
+            "tornado",
+            "click",
+            "python-dateutil",
+        ],
         extras_require={
             "sql": ["dataset"],
         },
