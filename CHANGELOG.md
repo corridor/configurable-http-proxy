@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## in progress
+## v0.4.0
 
 - Formatting and Linting has moved from black/flake8 to ruff
 - Remove `__version__` and the older pkg_resource usage
