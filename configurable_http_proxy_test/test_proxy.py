@@ -442,7 +442,7 @@ class TestProxy(AsyncHTTPTestCase):
         # The tornado websocket internally checks for: header[ORIGIN] == header[HOST] if both the headers
         # are present. This test checks that we close the ws_client correctly in case of such errors
 
-        with pytest.raises(HTTPClientError, match="HTTP 403: Forbidden"):
+        with pytest.raises(HTTPClientError, match="HTTP 400: Bad Request"):
             req = HTTPRequest(
                 self.get_url("/").replace("http:", "ws:"),
                 headers={
