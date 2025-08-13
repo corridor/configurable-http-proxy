@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## in progress
+
+- Formatting and Linting has moved from black/flake8 to ruff
+
+
 ## v0.3.0
 
 - Maintenance for this package has moved to Corridor

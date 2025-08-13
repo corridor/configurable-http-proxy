@@ -1,4 +1,4 @@
-[tool.black]
-# Set line-length lower than 120 as black will go 10% above if needed
+[tool.ruff]
 line-length = 110
-target-version = ['py36']
+output-format = "grouped"
+target-version = "py37"
