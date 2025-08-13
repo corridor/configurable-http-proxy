@@ -36,3 +36,18 @@ select = [
     "W",  # pycodestyle - warnings
     "YTT",  # flake8-2020
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["configurable_http_proxy_test"]
+
+[tool.coverage.run]
+branch = true
+cover_pylib = false
+source = ["."]
+include = ["configurable_http_proxy/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+sort = "Miss"
+include = ["configurable_http_proxy/*"]
