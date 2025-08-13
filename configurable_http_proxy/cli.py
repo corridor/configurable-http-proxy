@@ -6,12 +6,8 @@ import click
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
-from configurable_http_proxy import __version__, log
+from configurable_http_proxy import log
 from configurable_http_proxy.configproxy import PythonProxy
-
-
-def print_version(ctx, param, value):
-    click.echo(__version__)
 
 
 class HeaderParamType(click.ParamType):
@@ -27,7 +23,7 @@ class HeaderParamType(click.ParamType):
 
 
 @click.command()
-@click.version_option(__version__)
+@click.version_option()
 @click.option("--ip", type=click.STRING, help="Public-facing IP of the proxy")
 @click.option("--port", default=8000, type=click.INT, help="Public-facing port of the proxy")
 @click.option("--ssl-key", type=click.Path(), help="SSL key to use, if any")

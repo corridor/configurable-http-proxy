@@ -3,7 +3,7 @@
 ## in progress
 
 - Formatting and Linting has moved from black/flake8 to ruff
-
+- Remove `__version__`
 
 ## v0.3.0
 

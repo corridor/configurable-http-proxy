@@ -1,7 +1,5 @@
 import logging
 
-from configurable_http_proxy._version import version as __version__  # noqa: F401
-
 log = logging.getLogger("configurable_http_proxy")
 log.setLevel(logging.INFO)
 
