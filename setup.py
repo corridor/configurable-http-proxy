@@ -37,6 +37,5 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3 :: Only",
             "Operating System :: OS Independent",
-            "License :: OSI Approved :: Apache Software License",
         ],
     )
