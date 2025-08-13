@@ -1,0 +1,4 @@
+-e .[sql]
+ruff
+build
+pytest
