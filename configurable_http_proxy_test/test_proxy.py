@@ -5,7 +5,7 @@ import os
 import pytest
 from tornado.httpclient import HTTPClientError, HTTPRequest
 from tornado.httpserver import HTTPServer
-from tornado.testing import AsyncHTTPTestCase, bind_unused_port, get_async_test_timeout, gen_test
+from tornado.testing import AsyncHTTPTestCase, bind_unused_port, gen_test, get_async_test_timeout
 from tornado.web import Application, RequestHandler
 from tornado.websocket import WebSocketHandler, websocket_connect
 
@@ -274,7 +274,7 @@ class TestProxy(AsyncHTTPTestCase):
         assert type(proxy._routes).__name__ == "PlugableDummyStore"
 
         # With a class
-        from configurable_http_proxy_test.dummy_store import PlugableDummyStore
+        from configurable_http_proxy_test.dummy_store import PlugableDummyStore  # noqa: PLC0415
 
         proxy = PythonProxy({"storage_backend": PlugableDummyStore})
         assert type(proxy._routes).__name__ == "PlugableDummyStore"
@@ -439,8 +439,8 @@ class TestProxy(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_failure_due_to_request(self):
-        # The tornado websocket internally checks for: header[ORIGIN] == header[HOST] if both the headers are present.
-        # This test checks that we close the ws_client correctly in case of such errors
+        # The tornado websocket internally checks for: header[ORIGIN] == header[HOST] if both the headers
+        # are present. This test checks that we close the ws_client correctly in case of such errors
 
         with pytest.raises(HTTPClientError, match="HTTP 403: Forbidden"):
             req = HTTPRequest(

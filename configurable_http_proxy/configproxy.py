@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import datetime
 import importlib
 import json
 import os
-import typing
+import typing as t
 import urllib.parse
 
 from tornado.web import Application
 
 from configurable_http_proxy import log
-from configurable_http_proxy.store import MemoryStore
-from configurable_http_proxy.trie import URLTrie
 from configurable_http_proxy.handlers import APIHandler, ProxyHandler
+from configurable_http_proxy.store import MemoryStore
+
+if t.TYPE_CHECKING:
+    from configurable_http_proxy.trie import URLTrie
 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -82,7 +86,7 @@ class PythonProxy:
         self.update_last_activity(path)
         self.log.info(f"Route added {path} -> {data.get('target')}")
 
-    def remove_route(self, path) -> typing.Union[URLTrie, None]:
+    def remove_route(self, path) -> URLTrie | None:
         # remove a route from the routing table
         result = self._routes.get(path)
         if result:

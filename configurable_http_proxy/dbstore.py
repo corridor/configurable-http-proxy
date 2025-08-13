@@ -153,7 +153,7 @@ class TableTrie:
                 break
         else:
             data = None
-        return attrdict(data) if data else None
+        return AttrDict(data) if data else None
 
     def add(self, path, data):
         # add the data for the given exact path
@@ -202,16 +202,16 @@ class TableTrie:
         # e.g. /path/to/document
         # => yields /path/to/document, /path/to, /path, /
         levels = path.split("/")
-        for i, e in enumerate(levels):
+        for i, _lvl in enumerate(levels):
             yield "/".join(levels[: len(levels) - i + 1])
-        # always yield top level route
+        # always yield top levl route
         yield "/"
 
     def clean(self):
         self.table.delete()
 
 
-class attrdict(dict):
+class AttrDict(dict):
     # enable .attribute for dicts
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

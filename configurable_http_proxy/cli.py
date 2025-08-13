@@ -6,7 +6,6 @@ import click
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 
-
 from configurable_http_proxy import __version__, log
 from configurable_http_proxy.configproxy import PythonProxy
 
@@ -153,7 +152,7 @@ def main(**args):
         if args["ssl_allow_rc4"]:
             rc4 = "RC4"
         # ref: https://iojs.org/api/tls.html#tls_modifying_the_default_tls_cipher_suite
-        ssl_ciphers = ":".join(
+        ssl_ciphers = ":".join(  # noqa: FLY002 -- Easier to read
             [
                 "ECDHE-RSA-AES128-GCM-SHA256",
                 "ECDHE-ECDSA-AES128-GCM-SHA256",
@@ -268,7 +267,7 @@ def main(**args):
         "protocol_rewrite",
     ]:
         if args.get(key):
-            raise NotImplementedError(f'--{key.replace("_", "-")} is not supported yet')
+            raise NotImplementedError(f"--{key.replace('_', '-')} is not supported yet")
 
     # certs need to be provided for https redirection
     if not options.get("ssl") and options.get("redirect_port"):
@@ -297,7 +296,7 @@ def main(**args):
         log.info(f"ProtocolRewrite enabled. Rewriting to {options['protocol_rewrite']}")
 
     if not options.get("auth_token"):
-        log.warn("REST API is not authenticated.")
+        log.warning("REST API is not authenticated.")
 
     # external backend class
     options["storage_backend"] = args["storage_backend"]
@@ -306,8 +305,9 @@ def main(**args):
 
     if args["ip"] == "*":
         # handle ip=* alias for all interfaces
-        log.warn(
-            "Interpreting ip='*' as all-interfaces. Preferred usage is 0.0.0.0 for all IPv4 or '' for all-interfaces."
+        log.warning(
+            "Interpreting ip='*' as all-interfaces. "
+            "Preferred usage is 0.0.0.0 for all IPv4 or '' for all-interfaces."
         )
         args["ip"] = ""
 

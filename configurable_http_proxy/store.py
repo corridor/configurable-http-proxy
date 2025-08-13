@@ -1,4 +1,4 @@
-import typing
+from __future__ import annotations
 
 from configurable_http_proxy.trie import URLTrie, trim_prefix
 
@@ -30,7 +30,7 @@ class BaseStore:
 class MemoryStore(BaseStore):
     def __init__(self):
         super().__init__()
-        self.routes: typing.Dict[str, URLTrie] = {}
+        self.routes: dict[str, URLTrie] = {}
         self.urls = URLTrie()
 
     def get(self, path: str):

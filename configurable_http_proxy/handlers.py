@@ -1,17 +1,19 @@
+from __future__ import annotations
+
 import datetime
 import json
 import os
 import re
-import typing
+import typing as t
 import urllib.parse
 
 import dateutil.parser
 from tornado.gen import with_timeout
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
-from tornado.web import RequestHandler, HTTPError
+from tornado.httpclient import AsyncHTTPClient, HTTPClientError, HTTPRequest
+from tornado.web import HTTPError, RequestHandler
 from tornado.websocket import WebSocketHandler, websocket_connect
 
-if typing.TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from configurable_http_proxy.configproxy import PythonProxy
 
 
@@ -64,7 +66,7 @@ class APIHandler(RequestHandler):
         self.proxy.log.debug(f"Rejecting API request from: {auth or 'no authorization'}")
         raise HTTPError(403)
 
-    def get(self, path: str = None):
+    def get(self, path: str | None = None):
         self.is_authorized()
         # GET /api/routes/(path) gets a single route
         if path and len(path) > 0 and path != "/":
@@ -86,7 +88,7 @@ class APIHandler(RequestHandler):
             try:
                 inactive_since = dateutil.parser.isoparse(inactive_since)
             except ValueError:
-                raise HTTPError(400, f"Invalid datestamp '{inactive_since}' must be ISO8601.")
+                raise HTTPError(400, f"Invalid datestamp '{inactive_since}' must be ISO8601.") from None
 
         routes = self.proxy.get_routes(inactive_since)
 
@@ -95,21 +97,21 @@ class APIHandler(RequestHandler):
         self.write(json.dumps(routes, default=json_converter))
         self.finish()
 
-    def post(self, path: str = None):
+    def post(self, path: str | None = None):
         self.is_authorized()
         # POST adds a new route
         path = path or "/"
         data = json.loads(self.request.body)
 
         if not isinstance(data.get("target"), str):
-            self.proxy.log.warn(f"Bad POST data: {json.dumps(data, default=json_converter)}")
+            self.proxy.log.warning(f"Bad POST data: {json.dumps(data, default=json_converter)}")
             raise HTTPError(400, "Must specify 'target' as string")
 
         self.proxy.add_route(path, data)
         self.set_status(201)
         self.finish()
 
-    def delete(self, path=None):
+    def delete(self, path: str | None = None):
         self.is_authorized()
 
         # DELETE removes an existing route
@@ -145,9 +147,9 @@ class ProxyHandler(WebSocketHandler):
         raise HTTPError(code)
 
     async def handle_proxy_error(self, code, err):
-        # Called when proxy itself has an error so far, just 404 for no target and 503 for target not responding.
-        # Custom error server gets `/CODE?url=/escapedUrl/`, e.g. /404?url=%2Fuser%2Ffoo
-        self.proxy.log.error(f"{code} {self.request.method} {self.request.path} {str(err or '')}")
+        # Called when proxy itself has an error so far, just 404 for no target and 503 for target
+        # not responding. Custom error server gets `/CODE?url=/escapedUrl/`, e.g. /404?url=%2Fuser%2Ffoo
+        self.proxy.log.error(f"{code} {self.request.method} {self.request.path} {err or ''}")
 
         if self.ws_connection:
             self.proxy.log.debug("Socket error, no response to send")
@@ -335,7 +337,8 @@ class ProxyHandler(WebSocketHandler):
             #       the header level checks
             await self.start_ws_client(path)
             if not self.ws_client:
-                # Creating the websocket client to our target failed - so, don't establish a websocket connection
+                # Creating the websocket client to our target failed
+                # So, don't establish a websocket connection
                 return
 
             try:

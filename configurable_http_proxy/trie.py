@@ -1,4 +1,4 @@
-import typing
+from __future__ import annotations
 
 
 def trim_prefix(prefix):
@@ -25,7 +25,7 @@ def string_to_path(val):
 class URLTrie:
     def __init__(self, prefix=None):
         self.prefix: str = trim_prefix(prefix or "/")
-        self.branches: typing.Dict[str, URLTrie] = {}
+        self.branches: dict[str, URLTrie] = {}
         self.size = 0
         self.data = None
 
@@ -64,7 +64,7 @@ class URLTrie:
             del self.branches[part]
             self.size -= 1
 
-    def get(self, path) -> typing.Union[None, "URLTrie"]:
+    def get(self, path) -> "URLTrie" | None:
         # if I have data, return me, otherwise return None
         me = None if self.data is None else self
 

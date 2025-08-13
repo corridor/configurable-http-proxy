@@ -9,7 +9,7 @@ if version is None:
 
         module_name = __name__.split(".", 1)[0]
         version = get_distribution(module_name).version
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
 if version is None:
@@ -18,12 +18,12 @@ if version is None:
         from setuptools_scm import get_version
 
         version = get_version()
-    except Exception:  # noqa: S110
+    except Exception:
         pass
 
 if version is None:
     # When version.txt file is available - use that
     try:
         version = open(os.path.join(os.path.dirname(__file__), "version.txt")).read()
-    except Exception:  # noqa: S110
+    except Exception:
         pass

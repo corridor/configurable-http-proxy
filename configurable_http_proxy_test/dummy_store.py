@@ -1,18 +1,18 @@
 class PlugableDummyStore:
-    def get(path):
+    def get(self, path):
         pass
 
-    def get_target(path):
+    def get_target(self, path):
         pass
 
-    def get_all():
+    def get_all(self):
         pass
 
-    def add(path, data):
+    def add(self, path, data):
         pass
 
-    def update(path, data):
+    def update(self, path, data):
         pass
 
-    def remove(path):
+    def remove(self, path):
         pass
