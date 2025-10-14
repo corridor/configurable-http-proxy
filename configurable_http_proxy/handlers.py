@@ -36,9 +36,9 @@ class APIHandler(RequestHandler):
         self.proxy = proxy
 
     def write_error(self, status_code, **kwargs):
-        err_type, err, err_tb = (None, None, None)
+        _err_type, err, _err_tb = (None, None, None)
         if "exc_info" in kwargs:
-            err_type, err, err_tb = kwargs["exc_info"]
+            _err_type, err, _err_tb = kwargs["exc_info"]
         if not isinstance(err, HTTPError):  # Only log exceptions
             self.proxy.log.error(f"Error in handler for {self.request.method} {self.request.path}: {err}")
         return super().write_error(status_code, **kwargs)
