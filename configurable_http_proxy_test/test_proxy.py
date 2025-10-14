@@ -121,7 +121,13 @@ class TestProxy(AsyncHTTPTestCase):
         return super().tearDown()
 
     def get_app(self):
-        self.proxy = PythonProxy()
+        self.proxy = PythonProxy(
+            options={
+                # `proxy_timeout` Needs to be lesser than test timeout (5sec default)
+                # You can get the test timeout with `get_async_test_timeout()`
+                "proxy_timeout": 1,
+            }
+        )
         self.start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
         self._add_target_route(path="/")
 
