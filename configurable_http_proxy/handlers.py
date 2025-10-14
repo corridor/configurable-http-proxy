@@ -282,7 +282,10 @@ class ProxyHandler(WebSocketHandler):
 
             for key in ["for", "port", "proto"]:
                 key_header = f"x-forwarded-{key}"
-                headers[key_header] = ",".join([headers.get(key_header, ""), fwd_values[key]])
+                if headers.get(key_header, ""):
+                    headers[key_header] = headers.get(key_header, "") + "," + fwd_values[key]
+                else:
+                    headers[key_header] = fwd_values[key]
 
             headers["x-forwarded-host"] = headers.get("x-forwarded-host") or headers.get("host") or ""
 
