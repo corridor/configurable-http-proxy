@@ -325,7 +325,7 @@ class TestProxy(AsyncHTTPTestCase):
         self.proxy._routes.update("/missing", {"last_activity": now})
 
         # fail a websocket activity
-        with pytest.raises(HTTPClientError, match="HTTP 503: Service Unavailable"):
+        with pytest.raises(HTTPClientError, match="HTTP 599: Timeout while connecting"):
             yield websocket_connect(self.get_url("/missing/ws").replace("http:", "ws:"))
 
         # expect an error, since there is no websocket handler - check last_activity was not updated

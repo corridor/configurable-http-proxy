@@ -400,10 +400,12 @@ class ProxyHandler(WebSocketHandler):
                 self.proxy.timeout, websocket_connect(req, on_message_callback=write)
             )
         except HTTPClientError as err:
-            self.set_status(err.code)
+            self.closed = True
+            self.set_status(err.code, reason=err.message)
             self.write(err.message)
             self.finish()
         except Exception as err:
+            self.closed = True
             await self.handle_proxy_error(503, err)
             raise
 
